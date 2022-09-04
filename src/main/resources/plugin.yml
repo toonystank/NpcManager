@@ -1,0 +1,3 @@
+name: NpcManager
+version: '${project.version}'
+main: com.edward.npcmanager.NpcManager
