@@ -10,6 +10,7 @@ import lombok.SneakyThrows;
 import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.craftbukkit.v1_8_R3.CraftServer;
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
@@ -27,6 +28,7 @@ import java.util.UUID;
 public class NPC {
 
     private final NPCPlugin plugin;
+    private final NPCManager npcManager;
 
     private final UUID uuid = UUID.randomUUID();
 
@@ -52,26 +54,31 @@ public class NPC {
     @Getter @Setter
     private Location location;
 
+    private boolean rotation;
+
     private PacketPlayOutPlayerInfo packetPlayOutPlayerInfo;
     private PacketPlayOutNamedEntitySpawn packetPlayOutNamedEntitySpawn;
 
-
-    public NPC(NPCPlugin plugin, String name, String skin, Location location) {
+    public NPC(NPCPlugin plugin, NPCManager npcManager, String name, String skin, Location location) {
         this.plugin = plugin;
+        this.npcManager = npcManager;
         this.name = name;
         this.skin = skin;
         this.location = location;
+        this.rotation = false;
+        createEntity();
     }
 
     /**
      * Create the Fake EntityPlayer
      */
     public void createEntity() {
+        int ta = npcManager.hashCode();
         MinecraftServer server = ((CraftServer) plugin.getServer()).getServer();
         WorldServer world = ((CraftWorld) this.location.getWorld()).getHandle();
         PlayerInteractManager interactManager = new PlayerInteractManager(world);
-        createGameProfile();
         createSkin();
+        createGameProfile();
         this.entity = new EntityPlayer(
                 server,
                 world,
@@ -153,6 +160,14 @@ public class NPC {
         visiblePlayers.forEach(this::showTo);
     }
 
+    public void updateName(String name) {
+        this.entity.setCustomName(name);
+        this.entity.setCustomNameVisible(true);
+        createPackets();
+        visiblePlayers.forEach(this::hideFrom);
+        visiblePlayers.forEach(this::showTo);
+    }
+
     /**
      * Hide name tag of the Fake EntityPlayer
      *
@@ -206,18 +221,13 @@ public class NPC {
         sendPacket(player, this.packetPlayOutPlayerInfo);
         sendPacket(player, this.packetPlayOutNamedEntitySpawn);
         hideNameTagOfEntity(player);
-
         Bukkit.getServer().getScheduler().runTaskTimer(plugin, () -> {
-            Player currentlyOnline = Bukkit.getPlayer(player.getUniqueId());
-            if (currentlyOnline == null ||
-                    !currentlyOnline.isOnline() ||
-                    !visiblePlayers.contains(player)) {
-                Thread.currentThread().interrupt();
+            if (this.visiblePlayers.isEmpty()) {
                 return;
             }
-            sendHeadRotationPacket(player);
-        }, 0, 2);
-
+            if (!rotation) return;
+            visiblePlayers.stream().filter(OfflinePlayer::isOnline).forEach(this::sendHeadRotationPacket);
+        }, 0, 2); // 2 ticks = 100ms
         Bukkit.getServer().getScheduler().runTaskLater(plugin, () -> {
             try {
                 PacketPlayOutPlayerInfo removeFromTabPacket = new PacketPlayOutPlayerInfo(
@@ -230,9 +240,7 @@ public class NPC {
             }
         }, 20);
 
-        Bukkit.getServer().getScheduler().runTaskLater(plugin, () -> {
-            fixSkinLayer(player);
-        }, 8);
+        Bukkit.getServer().getScheduler().runTaskLater(plugin, () -> fixSkinLayer(player), 8);
     }
 
     /**
@@ -247,6 +255,12 @@ public class NPC {
         sendPacket(player, entityDestroy);
     }
 
+    /**
+     * Make the Fake EntityPlayer look at players
+     */
+    public void makeNPCRotate(boolean rotation) {
+        this.rotation = rotation;
+    }
     @SneakyThrows
     void sendHeadRotationPacket(Player player) {
         Location original = getLocation();
@@ -272,8 +286,10 @@ public class NPC {
 
     void fixSkinLayer(Player player) {
         byte skinFixByte = 0x01 | 0x02 | 0x04 | 0x08 | 0x10 | 0x20 | 0x40;
-        PacketPlayOutEntityHeadRotation headRotationPacket = new PacketPlayOutEntityHeadRotation(this.entity, skinFixByte);
-        sendPacket(player, headRotationPacket);
+        DataWatcher dataWatcher = this.entity.getDataWatcher();
+        dataWatcher.watch(10, skinFixByte);
+        PacketPlayOutEntityMetadata skinFixPacket = new PacketPlayOutEntityMetadata(this.entity.getId(), dataWatcher, true);
+        sendPacket(player, skinFixPacket);
     }
 
     @SneakyThrows
