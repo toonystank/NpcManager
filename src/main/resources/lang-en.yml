@@ -1,0 +1,20 @@
+Prefix: "&f[&6&lNPCPlugin&f] &7-&r "
+Default_npc_name: "&7[&8NPC&7]"
+
+Command_error: "&cAn error occurred while executing this command."
+Command_no_permission: "&cYou do not have permission to use this command."
+Command_no_console: "&cYou must be a player to use this command."
+Command_npc_not_found: "&cNPC not found."
+Command_npc_already_exists: "&cAn NPC with that name already exists."
+Command_npc_created: "&aNPC created."
+Command_npc_deleted: "&aNPC deleted."
+Command_npc_renamed: "&aNPC renamed."
+Command_npc_set_location: "&aNPC location updated."
+Command_npc_set_skin: "&aNPC skin updated."
+Command_npc_set_name: "&aNPC name updated."
+Command_npc_set_rotation: "&aNPC rotation updated."
+
+NPC_visibility: "&aNPC visibility updated."
+
+# VERSION DO NOT TOUCH
+Version: 1.0.0

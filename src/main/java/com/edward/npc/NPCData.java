@@ -3,8 +3,10 @@ package com.edward.npc;
 import com.edward.npc.utils.ConfigManager;
 import org.bukkit.Location;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.Set;
 
 public class NPCData extends ConfigManager {
 
@@ -13,8 +15,16 @@ public class NPCData extends ConfigManager {
         super(plugin, "data.yml", false, false);
     }
 
+    public @Nullable Set<String> getNPCs() {
+        return this.getConfig().getConfigurationSection("npc").getKeys(false);
+    }
     public void addNPC(String name) {
-        this.getConfig().getConfigurationSection("npc").createSection(name);
+        try {
+            this.getConfig().getConfigurationSection("npc").createSection(name);
+        } catch (NullPointerException e) {
+            this.getConfig().createSection("npc");
+            this.getConfig().getConfigurationSection("npc").createSection(name);
+        }
     }
     public void removeNPC(String name) {
         this.getConfig().getConfigurationSection("npc").set(name, null);

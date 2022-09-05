@@ -28,6 +28,7 @@ import java.util.UUID;
 public class NPC {
 
     private final NPCPlugin plugin;
+    @Getter
     private final NPCManager npcManager;
 
     private final UUID uuid = UUID.randomUUID();
@@ -73,7 +74,6 @@ public class NPC {
      * Create the Fake EntityPlayer
      */
     public void createEntity() {
-        int ta = npcManager.hashCode();
         MinecraftServer server = ((CraftServer) plugin.getServer()).getServer();
         WorldServer world = ((CraftWorld) this.location.getWorld()).getHandle();
         PlayerInteractManager interactManager = new PlayerInteractManager(world);
@@ -92,7 +92,7 @@ public class NPC {
                 this.location.getYaw(),
                 this.location.getPitch()
         );
-
+        createPackets();
     }
 
     /**
@@ -216,7 +216,6 @@ public class NPC {
         this.visiblePlayers.add(player);
         if (entity == null) {
             createEntity();
-            createPackets();
         }
         sendPacket(player, this.packetPlayOutPlayerInfo);
         sendPacket(player, this.packetPlayOutNamedEntitySpawn);
