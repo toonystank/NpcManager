@@ -39,10 +39,7 @@ public class NPCManager {
 
     }
     public void createNPC(String name, Player player) {
-        if (npcMap.containsKey(name)) {
-            sendMessage(player, Language.COMMAND_NPC_ALREADY_EXISTS);
-            return;
-        }
+        if (isContain(name, player, false)) return;
         NPC npc = new NPC(npcPlugin, this, name, name, player.getLocation());
         Bukkit.getOnlinePlayers().forEach(npc::showTo);
         npcMap.put(name, npc);
@@ -50,78 +47,70 @@ public class NPCManager {
 
         sendMessage(player, Language.COMMAND_NPC_CREATED);
     }
-    public void removeNPC(String name, Player player) {
-        if (!npcMap.containsKey(name)) {
-            sendMessage(player, Language.COMMAND_NPC_NOT_FOUND);
-            return;
-        }
+    public void removeNPC(String name, CommandSender sender) {
+        if (!isContain(name, sender, true)) return;
         NPC npc = npcMap.get(name);
         Bukkit.getOnlinePlayers().forEach(npc::hideFrom);
         npcMap.remove(name);
         npcData.removeNPC(name);
-        sendMessage(player, Language.COMMAND_NPC_DELETED);
+        sendMessage(sender, Language.COMMAND_NPC_DELETED);
     }
     public void showNPCForPlayer(CommandSender sender, String name, Player player) {
-        if (!npcMap.containsKey(name)) {
-            sendMessage(sender, Language.COMMAND_NPC_NOT_FOUND);
-            return;
-        }
+        if (!isContain(name, sender, true)) return;
         NPC npc = npcMap.get(name);
         npc.showTo(player);
         sendMessage(sender, Language.NPC_VISIBILITY_CHANGED);
     }
     public void hideNPCForPlayer(CommandSender sender, String name, Player player) {
-        if (!npcMap.containsKey(name)) {
-            sendMessage(sender, Language.COMMAND_NPC_NOT_FOUND);
-            return;
-        }
+        if (!isContain(name, sender, true)) return;
         NPC npc = npcMap.get(name);
         npc.hideFrom(player);
         sendMessage(sender, Language.NPC_VISIBILITY_CHANGED);
     }
     public void changeNPCName(String name, String newName, CommandSender sender) {
-        if (!npcMap.containsKey(name)) {
-            sendMessage(sender, Language.COMMAND_NPC_NOT_FOUND);
-            return;
-        }
+        if (!isContain(name, sender, true)) return;
         NPC npc = npcMap.get(name);
         npc.updateName(newName);
         npcMap.remove(name);
         npcMap.put(newName, npc);
         sendMessage(sender, Language.COMMAND_NPC_RENAMED);
     }
-    public void changeNPCSkin(String name, String skin, CommandSender player) {
-        if (!npcMap.containsKey(name)) {
-            sendMessage(player, Language.COMMAND_NPC_NOT_FOUND);
-            return;
-        }
+    public void changeNPCSkin(String name, String skin, CommandSender sender) {
+        if (!isContain(name, sender, true)) return;
         NPC npc = npcMap.get(name);
         npc.updateSkin(skin);
         npcData.setNPCSkin(name, skin);
-        sendMessage(player, Language.COMMAND_NPC_SET_SKIN);
+        sendMessage(sender, Language.COMMAND_NPC_SET_SKIN);
     }
     public void changeNPCLocation(String name, Location location, Player player) {
-        if (!npcMap.containsKey(name)) {
-            sendMessage(player, Language.COMMAND_NPC_NOT_FOUND);
-            return;
-        }
+        if (!isContain(name, player, true)) return;
         NPC npc = npcMap.get(name);
         npc.updateLocation(location);
         npcData.setNPCLocation(name, location);
         sendMessage(player, Language.COMMAND_NPC_SET_LOCATION);
     }
     public void makeNPCRotate(String name, boolean rotate, CommandSender sender) {
-        if (!npcMap.containsKey(name)) {
-            sendMessage(sender, Language.COMMAND_NPC_NOT_FOUND);
-            return;
-        }
+        if (!isContain(name, sender, true)) return;
         NPC npc = npcMap.get(name);
         npc.makeNPCRotate(rotate);
         npcData.setNPCRotation(name, rotate);
         sendMessage(sender, Language.COMMAND_NPC_SET_ROTATION);
     }
 
-   public void sendMessage(CommandSender sender, Language message) {
+    public void listNPCs(String name, CommandSender sender) {
+
+    }
+
+    boolean isContain(String name, CommandSender sender, boolean message) {
+        if (!npcMap.containsKey(name)) {
+            if (message) sendMessage(sender, Language.COMMAND_NPC_NOT_FOUND);
+            return false;
+        }
+        if (message) sendMessage(sender, Language.COMMAND_NPC_ALREADY_EXISTS);
+        return true;
+
+     }
+    public void sendMessage(CommandSender sender, Language message) {
         sender.sendMessage(ChatColor.translateAlternateColorCodes(
                 '&',
                 Language.PREFIX.getMessage() + message.getMessage()));

@@ -31,8 +31,7 @@ public class CommandManager extends BaseCommand {
     @CommandCompletion("@name")
     @Description("Remove an NPC")
     public void onRemove(CommandSender sender, String name) {
-        if (isConsole(sender)) return;
-        npcManager.removeNPC(name, (Player) sender);
+        npcManager.removeNPC(name, sender);
     }
 
     @Subcommand("show")
