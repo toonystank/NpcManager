@@ -5,7 +5,6 @@ import co.aikar.commands.annotation.*;
 import com.edward.npc.NPCManager;
 import com.edward.npc.NPCPlugin;
 import com.edward.npc.utils.Language;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -23,10 +22,7 @@ public class CommandManager extends BaseCommand {
     @CommandCompletion("@name")
     @Description("Create an NPC")
     public void onCreate(CommandSender sender, String name) {
-        if (!(sender instanceof Player)) {
-            npcManager.sendMessage(sender, Language.COMMAND_NO_CONSOLE);
-            return;
-        }
+        if (isConsole(sender)) return;
         npcManager.createNPC(name, (Player) sender);
     }
 
@@ -35,10 +31,7 @@ public class CommandManager extends BaseCommand {
     @CommandCompletion("@name")
     @Description("Remove an NPC")
     public void onRemove(CommandSender sender, String name) {
-        if (!(sender instanceof Player)) {
-            npcManager.sendMessage(sender, Language.COMMAND_NO_CONSOLE);
-            return;
-        }
+        if (isConsole(sender)) return;
         npcManager.removeNPC(name, (Player) sender);
     }
 
@@ -79,10 +72,7 @@ public class CommandManager extends BaseCommand {
     @CommandCompletion("@name")
     @Description("Change the location of an NPC")
     public void onChangeLocation(CommandSender sender, String name) {
-        if (!(sender instanceof Player)) {
-            npcManager.sendMessage(sender, Language.COMMAND_NO_CONSOLE);
-            return;
-        }
+        if (isConsole(sender)) return;
         npcManager.changeNPCLocation(name, ((Player) sender).getLocation(), (Player) sender);
     }
 
@@ -92,6 +82,14 @@ public class CommandManager extends BaseCommand {
     @Description("Make NPC look at players")
     public void onRotate(CommandSender sender, String name, boolean rotate) {
         npcManager.makeNPCRotate(name, rotate, sender);
+    }
+
+    boolean isConsole(CommandSender sender) {
+        if (!(sender instanceof Player)) {
+            npcManager.sendMessage(sender, Language.COMMAND_NO_CONSOLE);
+            return true;
+        }
+        return false;
     }
 
 }
